@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
 
 # Загрузка данных из файла
 data = pd.read_excel('Исходные данные.xlsx')
@@ -30,7 +31,6 @@ model_mgua.fit(X_train_best, y_train)
 # Предсказание на валидационной выборке
 y_val_pred = model_mgua.predict(X_val_best)
 val_mse = mean_squared_error(y_val, y_val_pred)
-print(f'Validation MSE: {val_mse}')
 
 # Предсказание на тестовой выборке для модели по МГУА
 y_test_pred_mgua = model_mgua.predict(X_test_best)
@@ -41,5 +41,39 @@ comparison_table = pd.DataFrame({
     'Предсказания модели МГУА': y_test_pred_mgua
 })
 
+# Подсчет средней ошибки аппроксимации
+comparison_table['Ошибка'] = np.abs((comparison_table['Фактические значения'] - comparison_table['Предсказания модели МГУА']) / comparison_table['Фактические значения'])
+mean_approx_error = comparison_table['Ошибка'].mean() * 100
+
+# Вывод средней ошибки аппроксимации
+print(f'Средняя ошибка аппроксимации: {mean_approx_error:.2f}%')
+
 # Вывод таблицы
 print(comparison_table)
+
+# Оценка качества модели
+if mean_approx_error < 10:
+    print("Модель имеет высокое качество (низкая ошибка аппроксимации).")
+elif mean_approx_error < 20:
+    print("Модель имеет удовлетворительное качество.")
+else:
+    print("Модель имеет низкое качество (высокая ошибка аппроксимации).")
+
+
+# Построение графика
+plt.figure(figsize=(10, 6))
+
+# Фактические значения
+plt.plot(comparison_table.index, comparison_table['Фактические значения'], label='Фактические значения', marker='o')
+# Предсказания модели МГУА
+plt.plot(comparison_table.index, comparison_table['Предсказания модели МГУА'], label='Предсказания модели МГУА', marker='x')
+
+# Настройка графика
+plt.title('Сравнение фактических значений и предсказаний модели МГУА')
+plt.xlabel('Индекс')
+plt.ylabel('Значение')
+plt.legend()
+plt.grid(True)
+
+# Отображение графика
+plt.show()
